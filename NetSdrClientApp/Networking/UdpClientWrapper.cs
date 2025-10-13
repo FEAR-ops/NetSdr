@@ -44,22 +44,11 @@ public class UdpClientWrapper : IUdpClient
             Console.WriteLine($"Error receiving message: {ex.Message}");
         }
     }
+    public void StopListening() => Cleanup("Stopped listening for UDP messages.");
 
-    public void StopListening()
-    {
-        try
-        {
-            _cts?.Cancel();
-            _udpClient?.Close();
-            Console.WriteLine("Stopped listening for UDP messages.");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error while stopping: {ex.Message}");
-        }
-    }
+    public void Exit() => Cleanup("Stopped listening for UDP messages.");
 
-    public void Exit()
+    private void Cleanup(string message)
     {
         try
         {
