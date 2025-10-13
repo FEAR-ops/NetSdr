@@ -65,7 +65,6 @@ namespace NetSdrClientAppTests
         }
 
         //TODO: add more NetSdrMessageHelper tests
-
         [Test]
         public void GetSamples_ShouldReturnExpectedIntegers()
         {
