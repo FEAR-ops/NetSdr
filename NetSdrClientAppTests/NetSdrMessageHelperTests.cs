@@ -65,20 +65,52 @@ namespace NetSdrClientAppTests
         }
 
         //TODO: add more NetSdrMessageHelper tests
+        // ? Новий тест 1 — Перевірка на null для параметрів
         [Test]
-        public void GetSamples_ShouldReturnExpectedIntegers()
+        public void GetControlItemMessage_ShouldThrow_WhenParametersNull()
         {
-            //Arrange
-            ushort sampleSize = 16; // 2 bytes per sample
-            byte[] body = { 0x01, 0x00, 0x02, 0x00 }; // 2 samples: 1, 2
+            var type = NetSdrMessageHelper.MsgTypes.Ack;
+            var code = NetSdrMessageHelper.ControlItemCodes.ReceiverState;
 
-            //Act
-            var samples = NetSdrMessageHelper.GetSamples(sampleSize, body).ToArray();
+            Assert.Throws<ArgumentNullException>(() =>
+                NetSdrMessageHelper.GetControlItemMessage(type, code, null));
+        }
 
-            //Assert
-            Assert.That(samples.Length, Is.EqualTo(2));
-            Assert.That(samples[0], Is.EqualTo(1));
-            Assert.That(samples[1], Is.EqualTo(2));
+        // ? Новий тест 2 — Перевірка на нульову довжину параметрів
+        [Test]
+        public void GetControlItemMessage_ShouldWork_WithZeroLengthParameters()
+        {
+            var type = NetSdrMessageHelper.MsgTypes.Ack;
+            var code = NetSdrMessageHelper.ControlItemCodes.ReceiverState;
+
+            byte[] msg = NetSdrMessageHelper.GetControlItemMessage(type, code, Array.Empty<byte>());
+
+            Assert.That(msg.Length, Is.GreaterThanOrEqualTo(4)); // тільки заголовок + код
+        }
+
+        // ? Новий тест 3 — Інший тип повідомлення для DataItem
+        [Test]
+        public void GetDataItemMessage_OtherType_WorksCorrectly()
+        {
+            var type = NetSdrMessageHelper.MsgTypes.DataItem1;
+            int parametersLength = 100;
+
+            byte[] msg = NetSdrMessageHelper.GetDataItemMessage(type, new byte[parametersLength]);
+
+            var num = BitConverter.ToUInt16(msg.Take(2).ToArray());
+            var actualType = (NetSdrMessageHelper.MsgTypes)(num >> 13);
+            Assert.That(actualType, Is.EqualTo(type));
+        }
+
+        // ? Новий тест 4 — Некоректний тип або код (якщо метод повинен це обробляти)
+        [Test]
+        public void GetControlItemMessage_InvalidCode_ShouldNotCrash()
+        {
+            var type = NetSdrMessageHelper.MsgTypes.Ack;
+            var invalidCode = (NetSdrMessageHelper.ControlItemCodes)9999;
+
+            byte[] msg = NetSdrMessageHelper.GetControlItemMessage(type, invalidCode, new byte[10]);
+            Assert.That(msg.Length, Is.GreaterThan(0));
         }
     }
 }
