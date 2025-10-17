@@ -64,7 +64,7 @@ namespace NetSdrClientAppTests
             Assert.That(parametersBytes.Count(), Is.EqualTo(parametersLength));
         }
 
-        //TODO: add more NetSdrMessageHelper tests
+        //TODO: add more NetSdrMessageHelper tests 
         [Test]
         public void GetSamples_ShouldReturnExpectedIntegers()
         {
