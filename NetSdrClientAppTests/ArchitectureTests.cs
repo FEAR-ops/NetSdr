@@ -24,15 +24,16 @@ namespace NetSdrClientAppTests
         [Test]
         public void Messages_Should_Not_Depend_On_Networking()
         {
+            // Arrange
             var result = Types.InAssembly(typeof(NetSdrClientApp.Messages.NetSdrMessageHelper).Assembly)
                 .That()
                 .ResideInNamespace("NetSdrClientApp.Messages")
                 .ShouldNot()
-                .HaveDependencyOn("System")
+                .HaveDependencyOn("NetSdrClientApp.Networking")
                 .GetResult();
 
-            // ⛔ Цей assert викличе помилку
-            Assert.That(result.IsSuccessful, Is.True, "Очікувана помилка: Messages мають залежність від System.");
+            // Assert
+            Assert.That(result.IsSuccessful, Is.True);
         }
 
         [Test]
