@@ -5,8 +5,6 @@ using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Threading.Tasks;
 
-using NetSdrClientApp.Networking;
-
 namespace NetSdrClientApp.Messages
 {
     //TODO: analyze possible use of [StructLayout] for better performance and readability 
@@ -17,8 +15,6 @@ namespace NetSdrClientApp.Messages
         private const short _msgHeaderLength = 2; //2 byte, 16 bit
         private const short _msgControlItemLength = 2; //2 byte, 16 bit
         private const short _msgSequenceNumberLength = 2; //2 byte, 16 bit
-
-        private static ITcpClient? _dummyClient;
         
         public enum MsgTypes
         {
