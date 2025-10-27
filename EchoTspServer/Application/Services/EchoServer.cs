@@ -12,7 +12,8 @@ namespace EchoTspServer.Application.Services
         private readonly ILogger _logger;
         private readonly IClientHandler _clientHandler;
         private TcpListener? _listener;
-        private readonly CancellationTokenSource _cts = new();
+        private CancellationTokenSource? _cts;
+        private bool _isStopped = false;
 
         public EchoServer(int port, ILogger logger, IClientHandler clientHandler)
         {
@@ -23,33 +24,54 @@ namespace EchoTspServer.Application.Services
 
         public async Task StartAsync()
         {
+            _cts = new CancellationTokenSource();
             _listener = new TcpListener(IPAddress.Any, _port);
             _listener.Start();
             _logger.Info($"Server started on port {_port}.");
 
-            while (!_cts.Token.IsCancellationRequested)
+            try
             {
-                try
+                while (!_cts.Token.IsCancellationRequested)
                 {
                     var client = await _listener.AcceptTcpClientAsync();
                     _logger.Info("Client connected.");
                     _ = Task.Run(() => _clientHandler.HandleClientAsync(client, _cts.Token));
                 }
-                catch (ObjectDisposedException)
-                {
-                    break;
-                }
             }
-
-            _logger.Info("Server shutdown.");
+            catch (ObjectDisposedException)
+            {
+                // Listener has been closed normally
+            }
+            catch (SocketException ex) when (ex.SocketErrorCode == SocketError.OperationAborted)
+            {
+                // Listener closed — expected when stopping
+            }
+            finally
+            {
+                _logger.Info("Server shutdown.");
+            }
         }
 
         public void Stop()
         {
-            _cts.Cancel();
-            _listener?.Stop();
-            _cts.Dispose();
-            _logger.Info("Server stopped.");
+            if (_isStopped) return; // already stopped — ignore
+            _isStopped = true;
+
+            try
+            {
+                _cts?.Cancel();
+                _listener?.Stop();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Already disposed — safe to ignore
+            }
+            finally
+            {
+                _cts?.Dispose();
+                _cts = null;
+                _logger.Info("Server stopped.");
+            }
         }
     }
 }

@@ -21,28 +21,39 @@ namespace EchoTspServer.Tests
             _server = new EchoServer(6001, _loggerMock.Object, _handlerMock.Object);
         }
 
-        //[Test]
-        //public async Task StartAsync_StartsAndStopsWithoutError()
-        //{
-        //    var task = _server.StartAsync();
-        //    await Task.Delay(100); // дати шанс серверу запуститися
-        //    _server.Stop();
+        [Test]
+        public async Task StartAsync_StartsAndStopsWithoutError()
+        {
+            var task = _server.StartAsync();
+            await Task.Delay(100); // дати серверу запуститися
 
-        //    await task;
+            // act
+            _server.Stop();
 
-        //    _loggerMock.Verify(l => l.Info(It.Is<string>(s => s.Contains("Server started"))), Times.Once);
-        //    _loggerMock.Verify(l => l.Info(It.Is<string>(s => s.Contains("Server stopped"))), Times.Once);
-        //}
+            try
+            {
+                await task; // дочекаємось завершення
+            }
+            catch (SocketException ex)
+            {
+                // Це очікувано, бо listener закривається під час AcceptTcpClientAsync
+                Assert.That(ex.SocketErrorCode, Is.EqualTo(SocketError.OperationAborted));
+            }
 
-        //[Test]
-        //public void Stop_CanBeCalledMultipleTimes_SafeToCall()
-        //{
-        //    Assert.DoesNotThrow(() =>
-        //    {
-        //        _server.Stop();
-        //        _server.Stop();
-        //    });
-        //}
+            _loggerMock.Verify(l => l.Info(It.Is<string>(s => s.Contains("Server started"))), Times.Once);
+            _loggerMock.Verify(l => l.Info(It.Is<string>(s => s.Contains("Server stopped"))), Times.Once);
+        }
+
+
+        [Test]
+        public void Stop_CanBeCalledMultipleTimes_SafeToCall()
+        {
+            Assert.DoesNotThrow(() =>
+            {
+                _server.Stop();
+                _server.Stop();
+            });
+        }
 
         [Test]
         public void Constructor_SetsDependenciesProperly()
