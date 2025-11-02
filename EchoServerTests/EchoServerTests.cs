@@ -58,7 +58,7 @@ namespace EchoTspServer.Tests
         [Test]
         public void Constructor_SetsDependenciesProperly()
         {
-            Assert.NotNull(_server);
+            Assert.IsNotNull(_server);
         }
     }
 }
