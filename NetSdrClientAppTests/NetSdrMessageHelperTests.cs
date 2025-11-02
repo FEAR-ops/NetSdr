@@ -112,5 +112,82 @@ namespace NetSdrClientAppTests
         }
 
 
+        // ✅ NEW TESTS BELOW ─────────────────────────────────────────────
+
+        [Test]
+        public void GetControlItemMessage_TooLargePayload_ShouldThrowException()
+        {
+            var type = NetSdrMessageHelper.MsgTypes.Ack;
+            var code = NetSdrMessageHelper.ControlItemCodes.ReceiverState;
+
+            Assert.Throws<ArgumentException>(() =>
+                NetSdrMessageHelper.GetControlItemMessage(type, code, new byte[9000]));
+        }
+
+        [Test]
+        public void GetDataItemMessage_HeaderShouldEncodeLengthAndTypeCorrectly()
+        {
+            var type = NetSdrMessageHelper.MsgTypes.DataItem1;
+            int parametersLength = 100;
+
+            byte[] msg = NetSdrMessageHelper.GetDataItemMessage(type, new byte[parametersLength]);
+
+            ushort header = BitConverter.ToUInt16(msg, 0);
+            var decodedType = (NetSdrMessageHelper.MsgTypes)(header >> 13);
+            var decodedLength = header & 0x1FFF;
+
+            Assert.That(decodedType, Is.EqualTo(type));
+            Assert.That(decodedLength, Is.EqualTo(parametersLength + 2));
+        }
+
+        [Test]
+        public void TranslateMessage_ShouldDecodeControlItemMessageCorrectly()
+        {
+            var type = NetSdrMessageHelper.MsgTypes.Ack;
+            var code = NetSdrMessageHelper.ControlItemCodes.RFFilter;
+            byte[] parameters = { 0xAA, 0xBB };
+
+            var message = NetSdrMessageHelper.GetControlItemMessage(type, code, parameters);
+
+            bool success = NetSdrMessageHelper.TranslateMessage(message, out var decodedType, out var decodedCode, out var seq, out var body);
+
+            Assert.That(success, Is.True);
+            Assert.That(decodedType, Is.EqualTo(type));
+            Assert.That(decodedCode, Is.EqualTo(code));
+            Assert.That(body, Is.EqualTo(parameters));
+        }
+
+        [Test]
+        public void TranslateMessage_InvalidControlItemCode_ShouldReturnFalse()
+        {
+            byte[] msg = { 0x00, 0x00, 0xFF, 0xFF, 0x10 };
+
+            bool success = NetSdrMessageHelper.TranslateMessage(msg, out _, out _, out _, out _);
+
+            Assert.That(success, Is.False);
+        }
+
+        [Test]
+        public void GetSamples_SampleSizeTooBig_ShouldThrow()
+        {
+            Assert.Throws<ArgumentOutOfRangeException>(() =>
+                NetSdrMessageHelper.GetSamples(40, new byte[4]).ToArray());
+        }
+
+        [Test]
+        public void TranslateMessage_DataItemWithSequence_ShouldDecodeSequenceCorrectly()
+        {
+            var type = NetSdrMessageHelper.MsgTypes.DataItem0;
+            byte[] parameters = { 0x10, 0x20 };
+
+            byte[] msg = NetSdrMessageHelper.GetDataItemMessage(type, parameters);
+
+            bool success = NetSdrMessageHelper.TranslateMessage(msg, out var decodedType, out _, out var sequence, out var body);
+
+            Assert.That(success, Is.True);
+            Assert.That(decodedType, Is.EqualTo(type));
+            Assert.That(sequence, Is.GreaterThanOrEqualTo(0)); // Not zeroed
+            Assert.That(body, Is.EqualTo(parameters));
+        }
     }
 }
