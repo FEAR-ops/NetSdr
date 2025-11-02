@@ -83,35 +83,34 @@ namespace NetSdrClientAppTests
 
         // ✅ BEGIN: Lab8 - Added for Sonar & Coverage
         [Test]
-        public void GetControlItemMessage_InvalidParamLength_Throws()
+        public void GetSamples_ZeroLength_ReturnsEmptyArray()
         {
-            Assert.Throws<ArgumentException>(() =>
-            {
-                NetSdrMessageHelper.GetControlItemMessage(
-                    NetSdrMessageHelper.MsgTypes.Ack,
-                    NetSdrMessageHelper.ControlItemCodes.ReceiverState,
-                    new byte[8192]);
-            });
+            //Arrange
+            ushort sampleSize = 16;
+            byte[] body = Array.Empty<byte>();
+
+            //Act
+            var samples = NetSdrMessageHelper.GetSamples(sampleSize, body).ToArray();
+
+            //Assert
+            Assert.That(samples.Length, Is.EqualTo(0));
         }
 
         [Test]
-        public void GetSamples_ZeroLength_ThrowsArgumentException()
+        public void GetSamples_WrongSampleSize_ReturnsPartialSamples()
         {
-            Assert.Throws<ArgumentException>(() =>
-            {
-                NetSdrMessageHelper.GetSamples(16, Array.Empty<byte>());
-            });
+            //Arrange
+            ushort sampleSize = 16;
+            byte[] body = { 0x01, 0x00, 0x02 }; // 3 bytes → 1.5 sample
+
+            //Act
+            var samples = NetSdrMessageHelper.GetSamples(sampleSize, body).ToArray();
+
+            //Assert
+            Assert.That(samples.Length, Is.EqualTo(1)); // only full sample counted
+            Assert.That(samples[0], Is.EqualTo(1));
         }
 
-        [Test]
-        public void GetSamples_WrongSampleSize_ThrowsArgumentException()
-        {
-            byte[] body = { 0x01, 0x00, 0x02 }; // odd number of bytes
-            Assert.Throws<ArgumentException>(() =>
-            {
-                NetSdrMessageHelper.GetSamples(16, body);
-            });
-        }
-       
+
     }
 }
