@@ -1,4 +1,4 @@
-using NetSdrClientApp.Messages;
+﻿using NetSdrClientApp.Messages;
 
 namespace NetSdrClientAppTests
 {
@@ -80,5 +80,38 @@ namespace NetSdrClientAppTests
             Assert.That(samples[0], Is.EqualTo(1));
             Assert.That(samples[1], Is.EqualTo(2));
         }
+
+        // ✅ BEGIN: Lab8 - Added for Sonar & Coverage
+        [Test]
+        public void GetControlItemMessage_InvalidParamLength_Throws()
+        {
+            Assert.Throws<ArgumentException>(() =>
+            {
+                NetSdrMessageHelper.GetControlItemMessage(
+                    NetSdrMessageHelper.MsgTypes.Ack,
+                    NetSdrMessageHelper.ControlItemCodes.ReceiverState,
+                    new byte[8192]);
+            });
+        }
+
+        [Test]
+        public void GetSamples_ZeroLength_ThrowsArgumentException()
+        {
+            Assert.Throws<ArgumentException>(() =>
+            {
+                NetSdrMessageHelper.GetSamples(16, Array.Empty<byte>());
+            });
+        }
+
+        [Test]
+        public void GetSamples_WrongSampleSize_ThrowsArgumentException()
+        {
+            byte[] body = { 0x01, 0x00, 0x02 }; // odd number of bytes
+            Assert.Throws<ArgumentException>(() =>
+            {
+                NetSdrMessageHelper.GetSamples(16, body);
+            });
+        }
+       
     }
 }
