@@ -110,3 +110,7 @@ namespace NetSdrClientAppTests
             Assert.That(samples.Length, Is.EqualTo(1)); // only full sample counted
             Assert.That(samples[0], Is.EqualTo(1));
         }
+
+
+    }
+}
