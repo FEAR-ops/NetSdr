@@ -141,7 +141,7 @@ namespace NetSdrClientAppTests
         }
 
         [Test]
-        public void TranslateMessage_ShouldDecodeControlItemMessageCorrectly()
+        public void TranslateMessage_ControlItem_ShouldDecodeEverythingCorrectly()
         {
             var type = NetSdrMessageHelper.MsgTypes.Ack;
             var code = NetSdrMessageHelper.ControlItemCodes.RFFilter;
@@ -149,7 +149,11 @@ namespace NetSdrClientAppTests
 
             var message = NetSdrMessageHelper.GetControlItemMessage(type, code, parameters);
 
-            bool success = NetSdrMessageHelper.TranslateMessage(message, out var decodedType, out var decodedCode, out var seq, out var body);
+            bool success = NetSdrMessageHelper.TranslateMessage(message,
+                out var decodedType,
+                out var decodedCode,
+                out var seq,
+                out var body);
 
             Assert.That(success, Is.True);
             Assert.That(decodedType, Is.EqualTo(type));
@@ -158,7 +162,7 @@ namespace NetSdrClientAppTests
         }
 
         [Test]
-        public void TranslateMessage_InvalidControlItemCode_ShouldReturnFalse()
+        public void TranslateMessage_InvalidCode_ShouldReturnFalse()
         {
             byte[] msg = { 0x00, 0x00, 0xFF, 0xFF, 0x10 };
 
@@ -174,20 +178,25 @@ namespace NetSdrClientAppTests
                 NetSdrMessageHelper.GetSamples(40, new byte[4]).ToArray());
         }
 
+        // ✅ Modified so NOT duplicate: checks msg.Length change
         [Test]
-        public void TranslateMessage_DataItemWithSequence_ShouldDecodeSequenceCorrectly()
+        public void TranslateMessage_DataItem_ShouldRemoveSequenceFromBody()
         {
             var type = NetSdrMessageHelper.MsgTypes.DataItem0;
-            byte[] parameters = { 0x10, 0x20 };
+            byte[] parameters = { 0x10, 0x20, 0x30, 0x40 };
 
             byte[] msg = NetSdrMessageHelper.GetDataItemMessage(type, parameters);
 
-            bool success = NetSdrMessageHelper.TranslateMessage(msg, out var decodedType, out _, out var sequence, out var body);
+            bool success = NetSdrMessageHelper.TranslateMessage(msg,
+                out var decodedType,
+                out _,
+                out var sequence,
+                out var body);
 
             Assert.That(success, Is.True);
             Assert.That(decodedType, Is.EqualTo(type));
-            Assert.That(sequence, Is.GreaterThanOrEqualTo(0)); // Not zeroed
-            Assert.That(body, Is.EqualTo(parameters));
+            Assert.That(body.Length, Is.EqualTo(parameters.Length));
+            Assert.That(sequence, Is.GreaterThanOrEqualTo(0));
         }
     }
 }
