@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.Security.Cryptography;
 
 namespace EchoTspServer.Application.Services
 {
