@@ -2,7 +2,6 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using System.Security.Cryptography;
 
 namespace EchoTspServer.Application.Services
 {
@@ -34,8 +33,9 @@ namespace EchoTspServer.Application.Services
         {
             try
             {
+                var rnd = new Random(); // Non-crypto usage. Safe. (Sonar S2245)
                 var samples = new byte[1024];
-                RandomNumberGenerator.Fill(samples);
+                rnd.NextBytes(samples);
                 _counter++;
 
                 var msg = new byte[] { 0x04, 0x84 }
