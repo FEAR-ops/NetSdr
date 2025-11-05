@@ -33,9 +33,8 @@ namespace EchoTspServer.Application.Services
         {
             try
             {
-                var rnd = new Random();
                 var samples = new byte[1024];
-                rnd.NextBytes(samples);
+                RandomNumberGenerator.Fill(samples);
                 _counter++;
 
                 var msg = new byte[] { 0x04, 0x84 }
